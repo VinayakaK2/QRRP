@@ -97,7 +97,7 @@ function auth(req, res, next) {
 // ---------- Init ----------
 async function init() {
   const d = await readData();
-  if (!d.admin.passwordHash) {
+  if (!d.admins || !d.admins[0] || !d.admins[0].passwordHash) {
     d.admin.passwordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
     for (let t of d.tables) {
       t.pinHash = bcrypt.hashSync(t.pinPlain || "1234", 10);
@@ -224,3 +224,4 @@ io.on("connection", s => {
 
 // ---------- Start ----------
 server.listen(PORT, () => console.log(`✅ Running on http://localhost:${PORT}`));
+
