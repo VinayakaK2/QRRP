@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlavorFusion - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-orange: #FF8A00;
+            --gold: #FFD700;
+            --dark-bg: #1a1a1a;
+            --sidebar-bg: #2D3748;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-dark: #2D3748;
+            --text-light: #718096;
+            --success: #48BB78;
+            --warning: #ED8936;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --gradient: linear-gradient(135deg, #E63946 0%, #FF8A00 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+        display: none;
+        }
+        #pageLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            z-index: 9999;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: white;
+            padding: 30px 0;
+            transition: all 0.3s ease;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            padding: 0 25px 30px;
+            border-bottom: 1px solid #4A5568;
+            margin-bottom: 25px;
+        }
+
+        .logo h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .nav-links li {
+            margin-bottom: 8px;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #CBD5E0;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(230, 57, 70, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-links a i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #E2E8F0;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-red);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-card .trend {
+            font-size: 0.9rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Management Sections */
+        .management-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(230, 57, 70, 0.3);
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .data-table th {
+            background: #F7FAFC;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .data-table tr:hover {
+            background: #F7FAFC;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #C6F6D5;
+            color: #22543D;
+        }
+
+        .status-inactive {
+            background: #FED7D7;
+            color: #742A2A;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit {
+            background: #BEE3F8;
+            color: #2A69AC;
+        }
+
+        .btn-delete {
+            background: #FED7D7;
+            color: #C53030;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+        }
+
+        /* QR Generator */
+        .qr-generator {
+            text-align: center;
+            padding: 30px;
+            background: #F7FAFC;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: #E2E8F0;
+            margin: 0 auto 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .nav-links {
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 0;
+            }
+            
+            .nav-links li {
+                margin: 0 10px 0 0;
+            }
+            
+            .nav-links a {
+                white-space: nowrap;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pageLoader" style="
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-size: 18px;
+        font-weight: 500;
+        color: #444;
+    ">
+    Checking authentication...
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>FlavorFusion</h2>
+            <p>Admin Dashboard</p>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="menumng.html"><i class="fas fa-utensils"></i> Menu Management</a></li>
+            <li><a href="categories.html"><i class="fas fa-layer-group"></i> Categories</a></li>
+            <li><a href="qrgenerator.html"><i class="fas fa-qrcode"></i> QR Generator</a></li>
+            <li><a href="tablemng.html"><i class="fas fa-table"></i> Table Management</a></li>
+            <li><a href="orders.html"><i class="fas fa-shopping-bag"></i> Orders</a></li>
+            <li><a href="analytics.html"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+            <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            <li><a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Admin Dashboard</h1>
+            <div class="user-info">
+                <div class="user-avatar">AD</div>
+                <div>
+                    <div style="font-weight: 600;">Admin User</div>
+                    <div style="font-size: 0.9rem; color: var(--text-light);">Restaurant Manager</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Today's Orders</h3>
+                <div class="value">47</div>
+                <div class="trend"><i class="fas fa-arrow-up"></i> 12% from yesterday</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Tables</h3>
+                <div class="value">8/12</div>
+                <div class="trend"><i class="fas fa-users"></i> 67% occupancy</div>
+            </div>
+            <div class="stat-card">
+                <h3>Revenue Today</h3>
+                <div class="value">₹24,580</div>
+                <div class="trend"><i class="fas fa-arrow-up"></i> ₹3,210 from yesterday</div>
+            </div>
+            <div class="stat-card">
+                <h3>Menu Items</h3>
+                <div class="value">86</div>
+                <div class="trend"><i class="fas fa-utensils"></i> 8 categories</div>
+            </div>
+        </div>
+
+        <!-- Category Management -->
+        <div class="management-section">
+            <div class="section-header">
+                <h2>Category Management</h2>
+                <button class="btn btn-primary" onclick="openCategoryModal()">
+                    <i class="fas fa-plus"></i> Add Category
+                </button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Category Name</th>
+                        <th>Items Count</th>
+                        <th>Status</th>
+                        <th>Display Order</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Appetizers</td>
+                        <td>14</td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td>1</td>
+                        <td class="action-buttons">
+                            <button class="action-btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="action-btn btn-delete"><i class="fas fa-trash"></i> Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Main Course</td>
+                        <td>22</td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td>2</td>
+                        <td class="action-buttons">
+                            <button class="action-btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="action-btn btn-delete"><i class="fas fa-trash"></i> Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Desserts</td>
+                        <td>15</td>
+                        <td><span class="status-badge status-active">Active</span></td>
+                        <td>3</td>
+                        <td class="action-buttons">
+                            <button class="action-btn btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="action-btn btn-delete"><i class="fas fa-trash"></i> Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- QR Code Generation -->
+        <div class="management-section">
+            <div class="section-header">
+                <h2>QR Code Generator</h2>
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i> Generate All QR Codes
+                </button>
+            </div>
+            <div class="qr-generator">
+                <div class="qr-placeholder">
+                    QR Code Preview<br>
+                    (Table #1)
+                </div>
+                <div class="form-group">
+                    <label for="tableSelect">Select Table</label>
+                    <select class="form-control" id="tableSelect">
+                        <option>Table 1</option>
+                        <option>Table 2</option>
+                        <option>Table 3</option>
+                        <option>Table 4</option>
+                        <option>Table 5</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fas fa-qrcode"></i> Generate QR Code
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="management-section">
+            <div class="section-header">
+                <h2>Recent Orders</h2>
+                <button class="btn btn-primary">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Table</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#ORD-125</td>
+                        <td>Table 5</td>
+                        <td>3 items</td>
+                        <td>₹1,250</td>
+                        <td><span class="status-badge status-active">Preparing</span></td>
+                        <td>12:30 PM</td>
+                    </tr>
+                    <tr>
+                        <td>#ORD-124</td>
+                        <td>Table 3</td>
+                        <td>2 items</td>
+                        <td>₹890</td>
+                        <td><span class="status-badge status-active">Ready</span></td>
+                        <td>12:15 PM</td>
+                    </tr>
+                    <tr>
+                        <td>#ORD-123</td>
+                        <td>Table 7</td>
+                        <td>4 items</td>
+                        <td>₹1,650</td>
+                        <td><span class="status-badge status-inactive">Completed</span></td>
+                        <td>11:45 AM</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- REPLACE existing script block with the following -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="" crossorigin="anonymous"></script>
+    <script>
+        /*
+        Secure Admin Panel Frontend
+        - Replace the insecure local-storage based auth and QR generation logic with a server-driven secure flow.
+        - Assumes cookie-based HttpOnly auth + CSRF token endpoint + server-signed QR tokens.
+        - Where backend endpoints are called, adapt URLs/names to your backend.
+        */
+
+        /* ---------- Configuration ---------- */
+        const API_PREFIX = '/api'; // change if your API root differs
+        const QR_API = API_PREFIX + '/admin/generate-qr';
+        const AUTH_ME = API_PREFIX + '/auth/me';
+        const AUTH_LOGOUT = API_PREFIX + '/auth/logout';
+        const CSRF_TOKEN_EP = API_PREFIX + '/csrf-token';
+        const VALIDATE_LOCATION_EP = API_PREFIX + '/validate-location';
+        const VALIDATE_PIN_EP = API_PREFIX + '/validate-pin';
+        const ORDERS_SUMMARY = API_PREFIX + '/orders/summary';
+
+        const SOCKET_PATH = '/'; // Socket.IO path if used
+        const PROXIMITY_RADIUS_METERS = 100; // also enforced server-side - client just requests validation
+
+        /* ---------- Helpers: security-minded ---------- */
+
+        // Always use fetch wrapper that attaches CSRF header (server must provide CSRF token)
+        async function getCsrfToken() {
+        try {
+            const r = await fetch(CSRF_TOKEN_EP, { credentials: 'include' });
+            if (!r.ok) return null;
+            const j = await r.json();
+            return j.csrfToken || null;
+        } catch (e) {
+            console.error('Error fetching CSRF token', e);
+            return null;
+        }
+        }
+
+        async function secureFetch(url, opts = {}) {
+        // Always use credentials to include HttpOnly auth cookie
+        const final = Object.assign({ credentials: 'include', headers: {} }, opts);
+        // Attach CSRF token for unsafe methods
+        if (!final.headers['Content-Type']) final.headers['Content-Type'] = 'application/json';
+        if (!final.headers['X-CSRF-Token'] && (final.method && final.method.toUpperCase() !== 'GET')) {
+            const csrf = await getCsrfToken();
+            if (csrf) final.headers['X-CSRF-Token'] = csrf;
+        }
+        const res = await fetch(url, final);
+        // Global handling for 401
+        if (res.status === 401) {
+            // session expired or unauthorized
+            alert('Session invalid or expired. Redirecting to login.');
+            window.location.href = 'login.html';
+            throw new Error('Unauthorized');
+        }
+        return res;
+        }
+
+        // Minimal sanitize function: avoid innerHTML, use textContent / createElement for text
+        function setText(el, text) {
+        if (!el) return;
+        el.textContent = typeof text === 'string' ? text : String(text);
+        }
+
+        // Create safe table row elements (no innerHTML)
+        function createCategoryRow(cat, index) {
+        const tr = document.createElement('tr');
+        const tdName = document.createElement('td'); setText(tdName, cat.name);
+        const tdItems = document.createElement('td'); setText(tdItems, cat.items);
+        const tdStatus = document.createElement('td'); 
+        const span = document.createElement('span');
+        span.className = 'status-badge ' + (cat.status === 'Active' ? 'status-active' : 'status-inactive');
+        setText(span, cat.status);
+        tdStatus.appendChild(span);
+        const tdOrder = document.createElement('td'); setText(tdOrder, cat.order);
+        const tdActions = document.createElement('td'); tdActions.className = 'action-buttons';
+        const btnEdit = document.createElement('button'); btnEdit.className = 'action-btn btn-edit'; btnEdit.dataset.index = index; setText(btnEdit, 'Edit');
+        const btnDel = document.createElement('button'); btnDel.className = 'action-btn btn-delete'; btnDel.dataset.index = index; setText(btnDel, 'Delete');
+        tdActions.appendChild(btnEdit); tdActions.appendChild(btnDel);
+
+        tr.appendChild(tdName); tr.appendChild(tdItems); tr.appendChild(tdStatus); tr.appendChild(tdOrder); tr.appendChild(tdActions);
+        return tr;
+        }
+
+        /* ---------- Session & Auth Validation ---------- */
+        async function validateSessionOrRedirect() {
+        try {
+            const res = await secureFetch(AUTH_ME, { method: 'GET' });
+            if (!res.ok) {
+            window.location.href = 'login.html';
+            return null;
+            }
+            const body = await res.json();
+            if (!body.ok) {
+            window.location.href = 'login.html';
+            return null;
+            }
+            // sessionExpiry optional, client side can auto-logout a few minutes before expiry
+            if (body.sessionExpiry && Date.now() > new Date(body.sessionExpiry).getTime()) {
+            await secureFetch(AUTH_LOGOUT, { method: 'POST' });
+            window.location.href = 'login.html';
+            return null;
+            }
+            return body.user;
+        } catch (e) {
+            console.error('Session validation failed', e);
+            window.location.href = 'login.html';
+            return null;
+        }
+        }
+
+        /* ---------- Logout ---------- */
+        async function setupLogout() {
+        const logoutLink = Array.from(document.querySelectorAll('a')).find(a => /logout/i.test(a.textContent));
+        if (!logoutLink) return;
+        logoutLink.addEventListener('click', async (ev) => {
+            ev.preventDefault();
+            try {
+            await secureFetch(AUTH_LOGOUT, { method: 'POST' });
+            } catch(e) { console.warn('Logout request failed'); }
+            window.location.href = 'login.html';
+        });
+        }
+
+        /* ---------- Rate-limiter (client side protection) ---------- */
+        function throttle(fn, delay = 1000) {
+        let last = 0;
+        return function (...args) {
+            const now = Date.now();
+            if (now - last < delay) return;
+            last = now;
+            return fn.apply(this, args);
+        };
+        }
+
+        /* ---------- QR Generation (server-signed) ---------- */
+        async function requestQrForTable(tableId) {
+        // Ask server to create a signed QR URL/token (server must sign token)
+        const res = await secureFetch(QR_API, {
+            method: 'POST',
+            body: JSON.stringify({ tableId })
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error('QR generation failed: ' + text);
+        }
+        const j = await res.json();
+        if (!j.ok) throw new Error(j.message || 'QR generation failed');
+        return j.qrUrlSigned; // server returns full URL to embed in QR
+        }
+
+        /* ---------- QR UI ---------- */
+        async function initQrGenerator() {
+        const qrSelect = document.getElementById('tableSelect');
+        const qrPlaceholder = document.querySelector('.qr-placeholder');
+
+        async function generateAndShow() {
+            const selection = qrSelect.value; // "Table 1"
+            const parts = selection.split(' ');
+            if (parts.length < 2) return alert('Select table');
+            const tableNo = parts[1];
+            try {
+            // disable button temporarily
+            genBtn.disabled = true;
+            genBtn.textContent = 'Generating...';
+            const signedUrl = await requestQrForTable(tableNo);
+            qrPlaceholder.innerHTML = ''; // safe because we will append element
+            const img = document.createElement('img');
+            img.alt = `QR for table ${tableNo}`;
+            img.width = 200;
+            img.height = 200;
+            // Use server-provided QR image URL OR generate client-side with qrious if you prefer
+            // Prefer server returned pre-generated QR image or signed link; if it's a data URL, set src directly.
+            img.src = signedUrl;
+            qrPlaceholder.appendChild(img);
+
+            // Also provide "copy link" button
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn';
+            copyBtn.style.marginTop = '8px';
+            copyBtn.textContent = 'Copy link';
+            copyBtn.addEventListener('click', async () => {
+                try {
+                await navigator.clipboard.writeText(signedUrl);
+                alert('Link copied');
+                } catch (e) { alert('Copy failed'); }
+            });
+            qrPlaceholder.appendChild(copyBtn);
+            } catch (e) {
+            console.error(e);
+            alert('QR generation failed. See console.');
+            } finally {
+            genBtn.disabled = false;
+            genBtn.textContent = 'Generate QR Code';
+            }
+        }
+
+        const genBtn = document.querySelector('.qr-generator button.btn-primary');
+        if (genBtn) genBtn.addEventListener('click', throttle(generateAndShow, 2000));
+        }
+
+        /* ---------- Categories management (safe DOM & server sync hooks) ---------- */
+        // The current admin.html used localStorage categories; in production, categories should be fetched/saved to server.
+        // This provides UI and local fallback but calls server endpoints if available.
+        async function initCategoryManagement() {
+        const tbody = document.querySelector('.management-section table.data-table tbody');
+        // Try to get from server; fallback to localStorage preloaded categories (non-sensitive)
+        let categories = [];
+        try {
+            const res = await secureFetch(API_PREFIX + '/categories', { method: 'GET' });
+            if (res.ok) {
+            const j = await res.json();
+            categories = j.categories || [];
+            } else {
+            // fallback local
+            categories = JSON.parse(localStorage.getItem('categories') || '[]');
+            }
+        } catch (e) {
+            categories = JSON.parse(localStorage.getItem('categories') || '[]');
+        }
+
+        function render() {
+            tbody.innerHTML = '';
+            categories.forEach((c, i) => tbody.appendChild(createCategoryRow(c, i)));
+        }
+        render();
+
+        tbody.addEventListener('click', async (ev) => {
+            const btn = ev.target.closest('button');
+            if (!btn) return;
+            const idx = Number(btn.dataset.index);
+            if (btn.classList.contains('btn-edit')) {
+            const newName = prompt('Edit Category name:', categories[idx].name);
+            if (!newName || !/^[\w\s-]{2,50}$/.test(newName)) return alert('Invalid name');
+            // Try to patch server
+            try {
+                const res = await secureFetch(API_PREFIX + '/categories/' + encodeURIComponent(idx), {
+                method: 'PATCH',
+                body: JSON.stringify({ name: newName })
+                });
+                if (res.ok) {
+                categories[idx].name = newName;
+                render();
+                alert('Updated');
+                return;
+                }
+            } catch (e) { console.warn('Server patch failed, fallback to local'); }
+            categories[idx].name = newName;
+            localStorage.setItem('categories', JSON.stringify(categories));
+            render();
+            } else if (btn.classList.contains('btn-delete')) {
+            if (!confirm('Delete category?')) return;
+            // try server delete
+            try {
+                const res = await secureFetch(API_PREFIX + '/categories/' + encodeURIComponent(idx), { method: 'DELETE' });
+                if (res.ok) {
+                categories.splice(idx, 1);
+                render();
+                return;
+                }
+            } catch(e) { console.warn('Server delete failed'); }
+            categories.splice(idx,1);
+            localStorage.setItem('categories', JSON.stringify(categories));
+            render();
+            }
+        });
+
+        // Add category
+        const addBtn = document.querySelector('.section-header .btn.btn-primary');
+        if (addBtn) {
+            addBtn.addEventListener('click', async () => {
+            const name = prompt('Enter Category Name:');
+            if (!name || !/^[\w\s-]{2,50}$/.test(name)) return alert('Invalid name');
+            // try server create
+            try {
+                const res = await secureFetch(API_PREFIX + '/categories', { method: 'POST', body: JSON.stringify({ name }) });
+                if (res.ok) {
+                const j = await res.json();
+                categories.push(j.category || { name, items:0, status:'Active', order: categories.length+1 });
+                render();
+                return;
+                }
+            } catch (e) { console.warn('Server add failed'); }
+            categories.push({ name, items:0, status:'Active', order: categories.length+1 });
+            localStorage.setItem('categories', JSON.stringify(categories));
+            render();
+            });
+        }
+        }
+
+        /* ---------- Orders: aggregated kitchen view & realtime ---------- */
+        let socket = null;
+        function initRealtimeOrders() {
+        // Try to connect via Socket.IO for real-time updates
+        try {
+            socket = io(SOCKET_PATH, { withCredentials: true }); // server must allow cookie auth for sockets
+            socket.on('connect', () => console.log('Socket connected', socket.id));
+            socket.on('orders:update', data => {
+            // data expected: aggregated summary
+            renderOrdersSummary(data);
+            });
+            socket.on('disconnect', () => console.log('Socket disconnected'));
+        } catch (e) {
+            console.warn('Socket.IO init failed, will fallback to polling', e);
+            // fallback: poll
+            setInterval(fetchOrdersSummary, 5000);
+        }
+        }
+
+        async function fetchOrdersSummary() {
+        try {
+            const res = await secureFetch(ORDERS_SUMMARY, { method: 'GET' });
+            if (!res.ok) return;
+            const j = await res.json();
+            renderOrdersSummary(j);
+        } catch (e) { console.warn('orders fetch failed', e); }
+        }
+
+        function renderOrdersSummary(summary) {
+        // summary: [{ itemName, totalQuantity, tables: ['1','5'], statusCounts: {New:2,Preparing:1} }, ...]
+        // We'll render into Recent Orders section table (replace body)
+        const ordersSection = document.querySelectorAll('.management-section')[document.querySelectorAll('.management-section').length - 1];
+        // That section was "Recent Orders" in original HTML; better to find by header title
+        const recentTables = document.querySelectorAll('.management-section');
+        let recentEl = null;
+        recentTables.forEach(sec => {
+            const h = sec.querySelector('.section-header h2');
+            if (h && /recent orders/i.test(h.textContent)) recentEl = sec;
+        });
+        if (!recentEl) return;
+
+        // Replace content with an aggregated table
+        const container = document.createElement('div');
+        container.className = 'management-section';
+        const html = document.createElement('div');
+        html.innerHTML = `
+            <div class="section-header"><h2>Kitchen Aggregated View</h2></div>
+            <table class="data-table">
+            <thead>
+                <tr><th>Item</th><th>Total Qty</th><th>Tables</th><th>Status Summary</th></tr>
+            </thead>
+            <tbody id="kitchen-summary-body"></tbody>
+            </table>
+        `;
+        container.appendChild(html);
+        recentEl.replaceWith(container);
+
+        const tbody = document.getElementById('kitchen-summary-body');
+        tbody.innerHTML = '';
+        if (!Array.isArray(summary)) return;
+        summary.forEach(row => {
+            const tr = document.createElement('tr');
+            const tdItem = document.createElement('td'); setText(tdItem, row.itemName);
+            const tdQty = document.createElement('td'); setText(tdQty, row.totalQuantity);
+            const tdTables = document.createElement('td'); setText(tdTables, (row.tables || []).join(', '));
+            const tdStatus = document.createElement('td'); setText(tdStatus, Object.entries(row.statusCounts || {}).map(([k,v]) => `${k}: ${v}`).join(', '));
+            tr.appendChild(tdItem); tr.appendChild(tdQty); tr.appendChild(tdTables); tr.appendChild(tdStatus);
+            tbody.appendChild(tr);
+        });
+        }
+
+        /* ---------- Proximity verification helpers (GPS + PIN fallback) ---------- */
+        async function verifyProximityWithServer(signedToken) {
+        return new Promise((resolve) => {
+            if (!('geolocation' in navigator)) {
+            return resolve({ ok: false, reason: 'unsupported' });
+            }
+            navigator.geolocation.getCurrentPosition(async pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            try {
+                const res = await secureFetch(VALIDATE_LOCATION_EP, {
+                method: 'POST',
+                body: JSON.stringify({ token: signedToken, lat, lng })
+                });
+                const j = await res.json();
+                resolve(j);
+            } catch (e) {
+                resolve({ ok:false, reason:'error' });
+            }
+            }, (err) => {
+            resolve({ ok:false, reason: err.message || 'denied' });
+            }, { enableHighAccuracy: true, timeout: 7000 });
+        });
+        }
+
+        async function verifyPinWithServer(signedToken, tableId, pin) {
+        try {
+            const res = await secureFetch(VALIDATE_PIN_EP, {
+            method: 'POST',
+            body: JSON.stringify({ token: signedToken, tableId, pin })
+            });
+            const j = await res.json();
+            return j;
+        } catch (e) {
+            return { ok:false, reason: 'error' };
+        }
+        }
+
+        /* Usage in ordering flow (example helper for integration with customer-facing pages)
+        - When a QR is scanned and it contains a server-signed token (e.g. menu?token=...), call verifyProximityWithServer(token)
+        - If ok:false and reason === 'denied' or 'unsupported', show PIN fallback: ask the user to enter the table PIN printed under the QR and call verifyPinWithServer(token, tableId, pin)
+        */
+
+        /* ---------- Initialization ---------- */
+        const loader = document.getElementById('pageLoader');
+        (async function init() {
+        // Validate session
+        const user = await validateSessionOrRedirect();
+        if (!user) return;
+        loader.style.display = 'none';
+        // Render username in header safely
+        const avatar = document.querySelector('.user-avatar');
+        if (avatar) setText(avatar, (user.name || 'AD').slice(0,2).toUpperCase());
+        const nameEl = document.querySelector('.user-info div > div');
+        if (nameEl) {
+            const display = nameEl.previousElementSibling ? nameEl.previousElementSibling : nameEl;
+            // Keep small update
+        }
+        // Setup logout, QR generator, categories, realtime
+        setupLogout();
+        initQrGenerator();
+        initCategoryManagement();
+        initRealtimeOrders();
+        // initial orders fetch
+        fetchOrdersSummary();
+
+        // security logging hook: inform server admin accessed (non-sensitive)
+        try { await secureFetch(API_PREFIX + '/admin/log', { method: 'POST', body: JSON.stringify({ action:'admin_panel_opened' }) }); } catch(e) {}
+        })();
+</script>
+
+</body>
+</html>
