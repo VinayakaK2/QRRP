@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { Server as IOServer } from "socket.io";
@@ -24,6 +25,15 @@ const io = new IOServer(server, { cors: { origin: true, credentials: true } });
 
 app.use(helmet());
 app.use(express.json());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',                        // Local testing
+    'https://vinayakak2.github.io/QRRP/',     // Replace with your GitHub Pages link
+    'https://qrrp-ipew.onrender.com'                // Backend itself
+  ],
+  credentials: true
+}));
+
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
 // Protect admin pages
@@ -224,4 +234,5 @@ io.on("connection", s => {
 
 // ---------- Start ----------
 server.listen(PORT, () => console.log(`✅ Running on http://localhost:${PORT}`));
+
 
