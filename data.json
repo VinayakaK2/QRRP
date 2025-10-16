@@ -15,6 +15,7 @@
       "name": "Table 1",
       "activeOrderId": null,
       "qrUrl": "",
+      "pinHash": "$b$10$example_hash_for_pin_1234", // Generate with bcrypt.hashSync('1234', 10)
       "createdAt": "2025-10-12T00:00:00.000Z",
       "updatedAt": "2025-10-12T00:00:00.000Z"
     },
@@ -23,6 +24,7 @@
       "name": "Table 2",
       "activeOrderId": null,
       "qrUrl": "",
+      "pinHash": "$b$10$example_hash_for_pin_1234", // Generate with bcrypt.hashSync('1234', 10)
       "createdAt": "2025-10-12T00:00:00.000Z",
       "updatedAt": "2025-10-12T00:00:00.000Z"
     }
