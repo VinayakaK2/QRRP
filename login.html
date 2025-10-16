@@ -88,28 +88,26 @@
           body: JSON.stringify({ username, password })
         });
 
-        console.log('Response status:', res.status); // Debug log
-        const data = await res.json();
-        console.log('Response data:', data); // Debug log
-
         if (!res.ok) {
-          errorMsg.textContent = data.msg || 'Invalid username or password.';
+          errorMsg.textContent = 'Invalid username or password.';
           return;
         }
 
+        const data = await res.json();
         if (data.ok) {
           // Redirect to admin panel
-          window.location.href = '/secure/admin.html';
+            window.location.href = '/secure/admin.html';
         } else {
           errorMsg.textContent = data.msg || 'Login failed.';
         }
 
       } catch (err) {
         errorMsg.textContent = 'Server not responding. Check backend.';
-        console.error('Fetch error:', err); // Debug log
+        console.error(err);
       }
     });
   </script>
 
 </body>
 </html>
+
