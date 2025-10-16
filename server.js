@@ -232,7 +232,12 @@ io.on("connection", s => {
   readData().then(d => s.emit("orders:update", d.orders));
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ ok: true, time: Date.now() });
+});
+
 // ---------- Start ----------
 server.listen(PORT, () => console.log(`✅ Running on http://localhost:${PORT}`));
+
 
 
