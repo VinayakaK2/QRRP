@@ -11,13 +11,13 @@ import rateLimit from "express-rate-limit";
 import { Server as IOServer } from "socket.io";
 import http from "http";
 import nodemailer from "nodemailer";
-import csrf from "csrf"; // Fixed: Use csrf instead of csurf
+import csurf from "csurf";
 import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.resolve("./data.json");
-const PUBLIC_DIR = path.resolve("./"); // Serve current folder
+const PUBLIC_DIR = path.resolve("./"); // ✅ Serve current folder
 
 const app = express();
 const server = http.createServer(app);
@@ -36,35 +36,29 @@ app.use(cors({
 
 app.use(cookieParser());
 app.use(express.static(PUBLIC_DIR));
+// Protect admin pages
+app.use("/secure", auth, express.static(path.join(PUBLIC_DIR, "secure")));
+app.use("/secure", (req, res) => {
+  res.redirect("/login.html");
+});
+
+
+const csrfProtection = csurf({ cookie: true });
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { ok: false, message: "Too many requests" }
+});
+app.use("/api/orders/create", limiter);
 
 // ---------- Utility ----------
 async function readData() {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf8");
-    return JSON.parse(raw);
-  } catch (err) {
-    if (err.code === 'ENOENT') {  // Fixed: Handle if file not exist
-      const defaultData = {
-        admins: [{ 
-          username: process.env.ADMIN_USERNAME || 'admin', 
-          passwordHash: bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10) 
-        }],
-        tables: [],
-        orders: []
-      };
-      await writeData(defaultData);  // Create file with default
-      return defaultData;
-    }
-    console.error('ReadData Error:', err); // Fixed: Log error
-    throw err;  // Other errors
-  }
+  const raw = await fs.readFile(DATA_FILE, "utf8");
+  return JSON.parse(raw);
 }
 async function writeData(data) {
-  try {
-    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), "utf8");
-  } catch (err) {
-    console.error('WriteData Error:', err); // Fixed: Log error
-  }
+  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), "utf8");
 }
 function dist(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
@@ -112,43 +106,28 @@ function auth(req, res, next) {
 
 // ---------- Init ----------
 async function init() {
-  try {
-    const d = await readData();
-    if (!d.admins || d.admins.length === 0) { // Fixed: Handle admins array
-      d.admins = [{ username: process.env.ADMIN_USERNAME || 'admin' }];
-    }
-    const admin = d.admins[0];
-    if (!admin.passwordHash) {
-      admin.passwordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10);
-    }
+  const d = await readData();
+  if (!d.admins || !d.admins[0] || !d.admins[0].passwordHash) {
+    d.admin.passwordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
     for (let t of d.tables) {
-      if (!t.pinHash) {
-        t.pinHash = bcrypt.hashSync(t.pinPlain || "1234", 10);
-      }
+      t.pinHash = bcrypt.hashSync(t.pinPlain || "1234", 10);
     }
     await writeData(d);
-  } catch (err) {
-    console.error('Init Error:', err); // Fixed: Log error
   }
 }
 await init();
 
 // ---------- API ----------
 app.post("/api/auth/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const d = await readData();
-    const admin = d.admins ? d.admins.find(a => a.username === username) : null; // Fixed: Use admins array
-    if (!admin) return res.status(401).json({ ok: false, msg: 'Invalid username' });
-    if (!bcrypt.compareSync(password, admin.passwordHash))
-      return res.status(401).json({ ok: false, msg: 'Invalid password' });
-    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "8h" });
-    res.cookie("session", token, { httpOnly: true, sameSite: "lax" });
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('Login Error:', err); // Fixed: Log error
-    res.status(500).json({ ok: false, msg: 'Server error' });
-  }
+
+  const { username, password } = req.body;
+  const d = await readData();
+  if (username !== d.admin.username) return res.status(401).json({ ok: false });
+  if (!bcrypt.compareSync(password, d.admin.passwordHash))
+    return res.status(401).json({ ok: false });
+  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "8h" });
+  res.cookie("session", token, { httpOnly: true, sameSite: "lax" });
+  res.json({ ok: true });
 });
 
 app.get("/api/auth/me", (req, res) => {
@@ -161,116 +140,91 @@ app.get("/api/auth/me", (req, res) => {
 });
 
 app.post("/api/admin/generate-qr", auth, csrfProtection, async (req, res) => {
-  try {
-    const { tableId } = req.body;
-    const token = signQr({ tableId });
-    const qrUrl = `${req.protocol}://${req.get("host")}/index.html?token=${encodeURIComponent(token)}`;
-    res.json({ ok: true, qrUrl });
-  } catch (err) {
-    console.error('QR Generate Error:', err); // Fixed: Log error
-    res.status(500).json({ ok: false, msg: 'Server error' });
-  }
+  const { tableId } = req.body;
+  const token = signQr({ tableId });
+  const qrUrl = `${req.protocol}://${req.get("host")}/index.html?token=${encodeURIComponent(token)}`;
+  res.json({ ok: true, qrUrl });
 });
 
 app.post("/api/validate-location", async (req, res) => {
-  try {
-    const { token, lat, lng } = req.body;
-    const payload = verifyQr(token);
-    if (!payload) return res.json({ ok: false, msg: "Invalid QR token" });
+  const { token, lat, lng } = req.body;
+  const payload = verifyQr(token);
+  if (!payload) return res.json({ ok: false, msg: "Invalid QR token" });
 
-    if (!lat || !lng)
-      return res.status(400).json({ ok: false, msg: "Location required" });
+  if (!lat || !lng)
+    return res.status(400).json({ ok: false, msg: "Location required" });
 
-    const distance = dist(
-      parseFloat(lat),
-      parseFloat(lng),
-      parseFloat(process.env.RESTAURANT_LAT),
-      parseFloat(process.env.RESTAURANT_LNG)
-    );
+  const distance = dist(
+    parseFloat(lat),
+    parseFloat(lng),
+    parseFloat(process.env.RESTAURANT_LAT),
+    parseFloat(process.env.RESTAURANT_LNG)
+  );
 
-    const allowed = distance <= parseFloat(process.env.RESTAURANT_RADIUS_METERS || 300);
-    res.json({
-      ok: allowed,
-      inside: allowed,
-      distance: Math.round(distance),
-      msg: allowed
-        ? "Inside restaurant radius"
-        : "Outside restaurant area, cannot place order"
-    });
-  } catch (err) {
-    console.error('Location Validate Error:', err); // Fixed: Log error
-    res.status(500).json({ ok: false, msg: 'Server error' });
-  }
+  const allowed = distance <= parseFloat(process.env.RESTAURANT_RADIUS_METERS);
+  res.json({
+    ok: allowed,
+    inside: allowed,
+    distance: Math.round(distance),
+    msg: allowed
+      ? "Inside restaurant radius"
+      : "Outside restaurant area, cannot place order"
+  });
 });
 
+
 app.post("/api/validate-pin", async (req, res) => {
-  try {
-    const { token, tableId, pin } = req.body;
-    const payload = verifyQr(token);
-    if (!payload) return res.json({ ok: false });
-    const d = await readData();
-    const t = d.tables.find(x => x.id == tableId);
-    if (!t) return res.json({ ok: false, msg: 'Table not found' });
-    res.json({ ok: bcrypt.compareSync(pin, t.pinHash) });
-  } catch (err) {
-    console.error('Pin Validate Error:', err); // Fixed: Log error
-    res.status(500).json({ ok: false, msg: 'Server error' });
-  }
+  const { token, tableId, pin } = req.body;
+  const payload = verifyQr(token);
+  if (!payload) return res.json({ ok: false });
+  const d = await readData();
+  const t = d.tables.find(x => x.id == tableId);
+  res.json({ ok: bcrypt.compareSync(pin, t.pinHash) });
 });
 
 app.post("/api/orders/create", limiter, async (req, res) => {
-  try {
-    const { token, tableId, items } = req.body;
-    const payload = verifyQr(token);
-    if (!payload) return res.status(401).json({ ok: false });
-    const d = await readData();
-    const order = { id: uuidv4(), tableId, items, createdAt: new Date().toISOString() };
-    d.orders.push(order);
-    await writeData(d);
-    io.emit("orders:update", d.orders);
-    sendMail(order);
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('Order Create Error:', err); // Fixed: Log error
-    res.status(500).json({ ok: false, msg: 'Server error' });
-  }
+  const { token, tableId, items } = req.body;
+  const payload = verifyQr(token);
+  if (!payload) return res.status(401).json({ ok: false });
+  const d = await readData();
+  const order = { id: uuidv4(), tableId, items, createdAt: new Date().toISOString() };
+  d.orders.push(order);
+  await writeData(d);
+  io.emit("orders:update", d.orders);
+  sendMail(order);
+  res.json({ ok: true });
 });
 
 app.get("/api/orders/summary", auth, async (req, res) => {
-  try {
-    const d = await readData();
-    const orders = d.orders || [];
+  const d = await readData();
+  const orders = d.orders || [];
 
-    const summary = {};
+  const summary = {};
 
-    // group by item name
-    for (const order of orders) {
-      for (const item of order.items) {
-        const name = item.name;
-        if (!summary[name]) {
-          summary[name] = {
-            itemName: name,
-            totalQty: 0,
-            tables: new Set()
-          };
-        }
-        summary[name].totalQty += item.qty;
-        summary[name].tables.add(order.tableId);
+  // group by item name
+  for (const order of orders) {
+    for (const item of order.items) {
+      const name = item.name;
+      if (!summary[name]) {
+        summary[name] = {
+          itemName: name,
+          totalQty: 0,
+          tables: new Set()
+        };
       }
+      summary[name].totalQty += item.qty;
+      summary[name].tables.add(order.tableId);
     }
-
-    // convert Set → Array for JSON
-    const result = Object.values(summary).map(s => ({
-      itemName: s.itemName,
-      totalQty: s.totalQty,
-      tables: Array.from(s.tables)
-    }));
-
-    res.json({ ok: true, data: result });
-  } catch (err) {
-    console.error('Orders Summary Error:', err); // Fixed: Log error
-    res.status(500).json({ ok: false, msg: 'Server error' });
   }
+
+  // convert Set → Array for JSON
+  const result = Object.values(summary).map(s => ({
+    itemName: s.itemName,
+    totalQty: s.totalQty,
+    tables: Array.from(s.tables)
+  }));
+
+  res.json({ ok: true, data: result });
 });
 
 // ---------- Socket.IO ----------
@@ -284,3 +238,7 @@ app.get('/health', (req, res) => {
 
 // ---------- Start ----------
 server.listen(PORT, () => console.log(`✅ Running on http://localhost:${PORT}`));
+
+
+
+
