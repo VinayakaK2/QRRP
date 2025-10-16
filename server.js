@@ -11,7 +11,7 @@ import rateLimit from "express-rate-limit";
 import { Server as IOServer } from "socket.io";
 import http from "http";
 import nodemailer from "nodemailer";
-import csrf from "csrf"; // Fixed: Replace csurf with csrf
+import csrf from "csrf"; // Fixed: Use csrf instead of csurf
 import { v4 as uuidv4 } from "uuid";
 
 dotenv.config();
@@ -220,7 +220,7 @@ app.post("/api/validate-pin", async (req, res) => {
 
 app.post("/api/orders/create", limiter, async (req, res) => {
   try {
-    const { token, tableId, items } = req.body; // Fixed: items instead of items
+    const { token, tableId, items } = req.body;
     const payload = verifyQr(token);
     if (!payload) return res.status(401).json({ ok: false });
     const d = await readData();
