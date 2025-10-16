@@ -118,7 +118,7 @@ async function init() {
 await init();
 
 // ---------- API ----------
-app.post("https://qrrp-ipew.onrender.com/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
 
   const { username, password } = req.body;
   const d = await readData();
@@ -130,7 +130,7 @@ app.post("https://qrrp-ipew.onrender.com/api/auth/login", async (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("https://qrrp-ipew.onrender.com/api/auth/me", (req, res) => {
+app.get("/api/auth/me", (req, res) => {
   try {
     const decoded = jwt.verify(req.cookies.session, JWT_SECRET);
     res.json({ ok: true, user: decoded, sessionExpiry: decoded.exp * 1000 });
@@ -139,14 +139,14 @@ app.get("https://qrrp-ipew.onrender.com/api/auth/me", (req, res) => {
   }
 });
 
-app.post("https://qrrp-ipew.onrender.com/api/admin/generate-qr", auth, csrfProtection, async (req, res) => {
+app.post("/api/admin/generate-qr", auth, csrfProtection, async (req, res) => {
   const { tableId } = req.body;
   const token = signQr({ tableId });
   const qrUrl = `${req.protocol}://${req.get("host")}/index.html?token=${encodeURIComponent(token)}`;
   res.json({ ok: true, qrUrl });
 });
 
-app.post("https://qrrp-ipew.onrender.com/api/validate-location", async (req, res) => {
+app.post("/api/validate-location", async (req, res) => {
   const { token, lat, lng } = req.body;
   const payload = verifyQr(token);
   if (!payload) return res.json({ ok: false, msg: "Invalid QR token" });
@@ -173,7 +173,7 @@ app.post("https://qrrp-ipew.onrender.com/api/validate-location", async (req, res
 });
 
 
-app.post("https://qrrp-ipew.onrender.com/api/validate-pin", async (req, res) => {
+app.post("/api/validate-pin", async (req, res) => {
   const { token, tableId, pin } = req.body;
   const payload = verifyQr(token);
   if (!payload) return res.json({ ok: false });
@@ -182,7 +182,7 @@ app.post("https://qrrp-ipew.onrender.com/api/validate-pin", async (req, res) => 
   res.json({ ok: bcrypt.compareSync(pin, t.pinHash) });
 });
 
-app.post("https://qrrp-ipew.onrender.com/api/orders/create", limiter, async (req, res) => {
+app.post("/api/orders/create", limiter, async (req, res) => {
   const { token, tableId, items } = req.body;
   const payload = verifyQr(token);
   if (!payload) return res.status(401).json({ ok: false });
@@ -195,7 +195,7 @@ app.post("https://qrrp-ipew.onrender.com/api/orders/create", limiter, async (req
   res.json({ ok: true });
 });
 
-app.get("https://qrrp-ipew.onrender.com/api/orders/summary", auth, async (req, res) => {
+app.get("/api/orders/summary", auth, async (req, res) => {
   const d = await readData();
   const orders = d.orders || [];
 
