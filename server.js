@@ -139,7 +139,7 @@ app.get("/api/auth/me", (req, res) => {
   }
 });
 
-app.post("https://qrrp-ipew.onrender.com/api/admin/generate-qr", auth, csrfProtection, async (req, res) => {
+app.post("/api/admin/generate-qr", auth, csrfProtection, async (req, res) => {
   const { tableId } = req.body;
   const token = signQr({ tableId });
   const qrUrl = `${req.protocol}://${req.get("host")}/index.html?token=${encodeURIComponent(token)}`;
@@ -238,6 +238,7 @@ app.get('/health', (req, res) => {
 
 // ---------- Start ----------
 server.listen(PORT, () => console.log(`✅ Running on http://localhost:${PORT}`));
+
 
 
 
