@@ -139,8 +139,11 @@ app.get("/api/auth/me", (req, res) => {
   }
 });
 
-app.post("https://qrrp-ipew.onrender.com/api/admin/generate-qr", auth, csrfProtection, async (req, res) => {
+app.post("https://qrrp-ipew.onrender.com/api/public/generate-qr", async (req, res) => {
   const { tableId } = req.body;
+  const { tableId } = req.body;
+  if (!tableId) return res.status(400).json({ ok: false, message: "Missing tableId" });
+  
   const token = signQr({ tableId });
   const qrUrl = `${req.protocol}://${req.get("host")}/index.html?token=${encodeURIComponent(token)}`;
   res.json({ ok: true, qrUrl });
@@ -238,6 +241,7 @@ app.get('/health', (req, res) => {
 
 // ---------- Start ----------
 server.listen(PORT, () => console.log(`✅ Running on http://localhost:${PORT}`));
+
 
 
 
