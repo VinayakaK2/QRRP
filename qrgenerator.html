@@ -700,18 +700,28 @@
                 if (!tableNum) return alert("Select or enter a table number");
                 if (!qrUrl) return alert("Please enter destination URL");
 
-                const finalUrl = `${qrUrl}?table=${tableNum}`;
-                qrContainer.innerHTML = ""; // clear old QR
-
-                // Create QR code
+                // 🔒 Ask backend to generate signed JWT token for this table
+                (async () => {
                 try {
+                    const res = await fetch("/api/qr/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ table: Number(tableNum), baseUrl: qrUrl })
+                    });
+                    const data = await res.json();
+                    if (!data.ok) throw new Error(data.message || "Failed to generate QR token");
+                    const finalUrl = data.url; // ✅ Signed URL with ?token=xxxxx
+
+                    qrContainer.innerHTML = ""; // clear old QR
+
+                    // Create QR code
                     new QRCode(qrContainer, {
-                        text: finalUrl,
-                        width: 200,
-                        height: 200,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
+                    text: finalUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
                     });
 
                     qrPlaceholder.style.display = "none";
@@ -721,18 +731,20 @@
                     const today = new Date().toLocaleDateString();
                     const t = tables.find(x => x.number == tableNum);
                     if (t) {
-                        t.qrGenerated = true;
-                        t.lastGenerated = today;
+                    t.qrGenerated = true;
+                    t.lastGenerated = today;
                     } else {
-                        tables.push({ number: parseInt(tableNum), qrGenerated: true, lastGenerated: today, scans: 0 });
+                    tables.push({ number: parseInt(tableNum), qrGenerated: true, lastGenerated: today, scans: 0 });
                     }
                     localStorage.setItem("tables", JSON.stringify(tables));
                     currentTable = tables.find(x => x.number == tableNum);
                 } catch (err) {
                     console.error(err);
-                    alert("QR code generation failed. Please check console.");
+                    alert("QR token generation failed: " + err.message);
                 }
+                })();
             };
+
 
             // ✅ Download PNG
             window.downloadQRCode = function () {
