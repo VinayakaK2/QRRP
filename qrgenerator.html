@@ -703,7 +703,7 @@
                 // 🔒 Ask backend to generate signed JWT token for this table
                 (async () => {
                 try {
-                      const res = await fetch("https://qrrp-ipew.onrender.com/api/admin/generate-qr", {
+                      const res = await fetch("https://qrrp-ipew.onrender.com/api/public/generate-qr", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ table: Number(tableNum), baseUrl: qrUrl })
@@ -792,5 +792,6 @@
 
 </body>
 </html>
+
 
 
