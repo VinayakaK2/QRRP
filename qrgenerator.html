@@ -703,14 +703,22 @@
                 // 🔒 Ask backend to generate signed JWT token for this table
                 (async () => {
                 try {
-                    const res = await fetch("/api/qr/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ table: Number(tableNum), baseUrl: qrUrl })
-                    });
-                    const data = await res.json();
-                    if (!data.ok) throw new Error(data.message || "Failed to generate QR token");
-                    const finalUrl = data.url; // ✅ Signed URL with ?token=xxxxx
+                      const res = await fetch("https://qrrp-ipew.onrender.com/api/qr/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ table: Number(tableNum), baseUrl: qrUrl })
+                      });
+                    
+                      const text = await res.text();
+                      let data;
+                      try {
+                        data = JSON.parse(text);
+                      } catch {
+                        throw new Error("Server did not return valid JSON. Got:\n" + text.slice(0, 100));
+                      }
+                    
+                      if (!data.ok) throw new Error(data.message || "Failed to generate QR token");
+                      const finalUrl = data.url; // ✅ Signed URL with ?token=xxxxx
 
                     qrContainer.innerHTML = ""; // clear old QR
 
@@ -784,3 +792,4 @@
 
 </body>
 </html>
+
